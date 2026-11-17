@@ -1,0 +1,1512 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>IvanovService | Видеомонтаж</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    :root {
+      --bg-deep: #040711;
+      --bg-card: rgba(13, 21, 42, 0.72);
+      --glass-border: rgba(103, 169, 255, 0.24);
+      --glass-highlight: rgba(203, 233, 253, 0.16);
+      --blue-dark: #03195b;
+      --blue-mid: #1951fc;
+      --blue-bright: #3781fc;
+      --blue-ice: #cbe9fd;
+      --text-main: #f4f8ff;
+      --text-muted: #8b9ec2;
+      --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+      --smooth: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+      background: radial-gradient(circle at 50% -8%, #0b2cb1 0%, #040711 52%);
+      color: var(--text-main);
+      min-height: 100vh;
+      overflow-x: hidden;
+      padding-bottom: 104px;
+    }
+
+    /* SPLASH SCREEN WITH EXACT APPLE GLASS LOGO */
+    #splash-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: radial-gradient(circle at 50% 35%, #0b2cb1 0%, #03091a 68%, #02040a 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.55s var(--smooth), transform 0.55s var(--smooth);
+    }
+
+    #splash-screen.hidden {
+      opacity: 0;
+      transform: scale(1.05);
+      pointer-events: none;
+    }
+
+    .logo-svg {
+      width: 196px;
+      height: 132px;
+      filter: drop-shadow(0 18px 34px rgba(3, 25, 91, 0.8));
+      animation: logoFloat 2.6s ease-in-out infinite alternate;
+    }
+
+    @keyframes logoFloat {
+      0% { transform: translateY(0px) scale(1); }
+      100% { transform: translateY(-6px) scale(1.02); }
+    }
+
+    .splash-title {
+      margin-top: 20px;
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: -0.4px;
+      background: linear-gradient(180deg, #ffffff 0%, #cbe9fd 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .splash-sub {
+      margin-top: 6px;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .splash-bar-track {
+      margin-top: 26px;
+      width: 160px;
+      height: 4px;
+      border-radius: 99px;
+      background: rgba(255, 255, 255, 0.1);
+      overflow: hidden;
+    }
+
+    .splash-bar-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 99px;
+      background: linear-gradient(90deg, #1951fc, #cbe9fd);
+      box-shadow: 0 0 12px #3781fc;
+      transition: width 1.1s var(--smooth);
+    }
+
+    /* TOP HEADER WITH SIDEBAR DRAWER BUTTON */
+    .app-header {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      background: rgba(4, 7, 17, 0.65);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .menu-burger-btn {
+      width: 38px;
+      height: 38px;
+      border-radius: 13px;
+      background: rgba(55, 129, 252, 0.16);
+      border: 1px solid var(--glass-border);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      cursor: pointer;
+      transition: transform 0.35s var(--spring);
+    }
+
+    .menu-burger-btn:active {
+      transform: scale(0.9);
+    }
+
+    .burger-line {
+      width: 16px;
+      height: 2px;
+      border-radius: 2px;
+      background: #cbe9fd;
+    }
+
+    .brand-title {
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .brand-status {
+      font-size: 11px;
+      color: #6ee7b7;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #22c55e;
+      box-shadow: 0 0 8px #22c55e;
+    }
+
+    .balance-chip {
+      background: rgba(25, 81, 252, 0.22);
+      border: 1px solid rgba(103, 169, 255, 0.35);
+      padding: 7px 12px;
+      border-radius: 99px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--blue-ice);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: transform 0.35s var(--spring);
+    }
+
+    .balance-chip:active {
+      transform: scale(0.92);
+    }
+
+    /* LEFT SIDEBAR DRAWER (INSPIRED BY RABBITS SIDEBAR REFERENCE) */
+    .drawer-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 120;
+      background: rgba(2, 4, 10, 0.72);
+      backdrop-filter: blur(8px);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s ease;
+    }
+
+    .drawer-backdrop.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .left-drawer {
+      position: fixed;
+      top: 12px;
+      bottom: 12px;
+      left: 12px;
+      width: 276px;
+      z-index: 130;
+      background: rgba(11, 16, 30, 0.94);
+      backdrop-filter: blur(28px);
+      -webkit-backdrop-filter: blur(28px);
+      border: 1px solid rgba(203, 233, 253, 0.16);
+      border-radius: 30px;
+      padding: 20px 14px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 18px 0 48px rgba(0, 0, 0, 0.75);
+      transform: translateX(-115%);
+      transition: transform 0.45s var(--spring);
+    }
+
+    .left-drawer.open {
+      transform: translateX(0);
+    }
+
+    .drawer-profile-card {
+      background: linear-gradient(145deg, rgba(25, 81, 252, 0.25), rgba(13, 21, 42, 0.9));
+      border: 1px solid rgba(103, 169, 255, 0.3);
+      border-radius: 22px;
+      padding: 14px;
+      margin-bottom: 16px;
+    }
+
+    .drawer-user-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .drawer-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #1951fc, #3781fc);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 16px;
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(55, 129, 252, 0.45);
+    }
+
+    .drawer-bal-row {
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .drawer-nav-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .drawer-item {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 11px 14px;
+      border-radius: 16px;
+      color: var(--text-muted);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.3s var(--spring);
+    }
+
+    .drawer-item:active {
+      transform: scale(0.96);
+    }
+
+    .drawer-item.active {
+      background: linear-gradient(90deg, rgba(55, 129, 252, 0.24) 0%, rgba(55, 129, 252, 0.04) 100%);
+      border-color: rgba(103, 169, 255, 0.38);
+      color: #ffffff;
+      box-shadow: 0 0 20px rgba(55, 129, 252, 0.22);
+    }
+
+    .drawer-item.active::before {
+      content: "";
+      position: absolute;
+      left: -6px;
+      width: 4px;
+      height: 20px;
+      border-radius: 99px;
+      background: #3781fc;
+      box-shadow: 0 0 10px #3781fc;
+    }
+
+    .drawer-item-left {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+    }
+
+    .drawer-badge {
+      background: rgba(55, 129, 252, 0.28);
+      color: var(--blue-ice);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 99px;
+    }
+
+    /* MAIN CONTAINER & PAGES */
+    .container {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    .page {
+      display: none;
+      animation: bounceUp 0.48s var(--spring) forwards;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    @keyframes bounceUp {
+      0% { opacity: 0; transform: translateY(20px) scale(0.97); }
+      100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .glass-card {
+      background: var(--bg-card);
+      border: 1px solid var(--glass-border);
+      border-radius: 24px;
+      padding: 18px;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.45), inset 0 1px 0 var(--glass-highlight);
+      transition: transform 0.38s var(--spring);
+    }
+
+    .tap-bounce:active {
+      transform: scale(0.95);
+    }
+
+    /* HERO SHOWCASE ON HOME (INSPIRED BY DIWANDER MOBILE-FIRST REFERENCE) */
+    .hero-showcase {
+      position: relative;
+      overflow: hidden;
+      border-radius: 28px;
+      padding: 24px 20px 20px;
+      background:
+        radial-gradient(circle at 80% 15%, rgba(55, 129, 252, 0.45) 0%, transparent 55%),
+        radial-gradient(circle at 15% 85%, rgba(11, 44, 177, 0.55) 0%, transparent 60%),
+        linear-gradient(165deg, #0b193d 0%, #050a18 100%);
+      border: 1px solid rgba(203, 233, 253, 0.28);
+      box-shadow: 0 22px 44px rgba(3, 25, 91, 0.55), inset 0 1px 1px rgba(255, 255, 255, 0.3);
+    }
+
+    .hero-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 11px;
+      border-radius: 99px;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--blue-ice);
+    }
+
+    .hero-h1 {
+      margin-top: 14px;
+      font-size: 27px;
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.6px;
+    }
+
+    .hero-h1 span {
+      background: linear-gradient(90deg, #60a5fa, #cbe9fd);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-desc {
+      margin-top: 8px;
+      font-size: 13px;
+      color: rgba(203, 233, 253, 0.82);
+      line-height: 1.45;
+    }
+
+    /* Floating Glass Preview Mockup inside Hero */
+    .hero-glass-preview {
+      margin-top: 18px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 20px;
+      padding: 14px;
+      backdrop-filter: blur(14px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .hero-cta-row {
+      margin-top: 16px;
+      display: grid;
+      grid-template-columns: 1.35fr 1fr;
+      gap: 10px;
+    }
+
+    .btn-white {
+      background: #ffffff;
+      color: #03195b;
+      border: none;
+      border-radius: 15px;
+      padding: 13px 14px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+      transition: transform 0.35s var(--spring);
+    }
+
+    .btn-white:active { transform: scale(0.94); }
+
+    .btn-glass {
+      background: rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      border-radius: 15px;
+      padding: 13px 12px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.35s var(--spring);
+    }
+
+    .btn-glass:active { transform: scale(0.94); }
+
+    /* BENTO WIDGETS GRID (NO CALENDAR) */
+    .section-head {
+      margin: 20px 2px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .section-title { font-size: 16px; font-weight: 700; }
+    .section-hint { font-size: 12px; color: var(--text-muted); }
+
+    .bento-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .widget-box {
+      padding: 16px;
+      border-radius: 22px;
+      cursor: pointer;
+    }
+
+    .widget-tag {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    .widget-val {
+      margin-top: 6px;
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--blue-ice);
+    }
+
+    .widget-sub {
+      margin-top: 4px;
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.35;
+    }
+
+    /* SMOOTH 60FPS CURVE WIDGET */
+    .curve-widget {
+      margin-top: 12px;
+      padding: 16px;
+      touch-action: pan-y;
+    }
+
+    .curve-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .curve-metric { font-size: 26px; font-weight: 800; color: #fff; }
+
+    .curve-badge {
+      background: rgba(55, 129, 252, 0.2);
+      border: 1px solid rgba(55, 129, 252, 0.4);
+      color: var(--blue-ice);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 99px;
+    }
+
+    #chart-canvas {
+      width: 100%;
+      height: 110px;
+      margin-top: 10px;
+      display: block;
+    }
+
+    /* PRICES & CALCULATOR */
+    .seg-tabs {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      background: rgba(8, 13, 28, 0.8);
+      padding: 5px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .seg-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 9px 4px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s var(--spring);
+    }
+
+    .seg-btn.active {
+      background: linear-gradient(135deg, #1951fc, #3781fc);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(55, 129, 252, 0.4);
+    }
+
+    .mode-switch {
+      margin-top: 12px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      background: rgba(8, 13, 28, 0.8);
+      padding: 5px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .mode-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 8px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s var(--spring);
+    }
+
+    .mode-btn.active {
+      background: rgba(55, 129, 252, 0.22);
+      color: var(--blue-ice);
+      border: 1px solid rgba(55, 129, 252, 0.45);
+    }
+
+    .price-list {
+      margin-top: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .price-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 16px;
+      border-radius: 20px;
+      background: rgba(13, 21, 42, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      cursor: pointer;
+      transition: transform 0.35s var(--spring), border-color 0.25s ease;
+    }
+
+    .price-item:active { transform: scale(0.96); }
+
+    .price-item.selected {
+      background: linear-gradient(135deg, rgba(25, 81, 252, 0.25), rgba(13, 21, 42, 0.85));
+      border-color: #3781fc;
+      box-shadow: 0 8px 24px rgba(25, 81, 252, 0.25);
+    }
+
+    .price-item-title { font-size: 15px; font-weight: 700; }
+    .price-item-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+    .price-item-cost { font-size: 16px; font-weight: 800; color: var(--blue-ice); white-space: nowrap; }
+
+    .addon-row {
+      margin-top: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      cursor: pointer;
+    }
+
+    .addon-check {
+      width: 22px;
+      height: 22px;
+      border-radius: 7px;
+      border: 1.5px solid var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+    }
+
+    .addon-row.checked .addon-check {
+      background: #3781fc;
+      border-color: #3781fc;
+      color: #fff;
+    }
+
+    .primary-cta {
+      margin-top: 16px;
+      width: 100%;
+      padding: 15px;
+      border: none;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #1951fc 0%, #3781fc 100%);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 10px 26px rgba(25, 81, 252, 0.45);
+      transition: transform 0.35s var(--spring);
+    }
+
+    .primary-cta:active { transform: scale(0.96); }
+
+    /* FLOATING BOTTOM DOCK */
+    .bottom-dock {
+      position: fixed;
+      bottom: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(100% - 32px);
+      max-width: 440px;
+      z-index: 50;
+      background: rgba(11, 18, 36, 0.82);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(203, 233, 253, 0.18);
+      border-radius: 26px;
+      padding: 6px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.65);
+    }
+
+    .dock-item {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 9px 4px;
+      border-radius: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.35s var(--spring);
+    }
+
+    .dock-item.active {
+      background: rgba(55, 129, 252, 0.24);
+      color: #ffffff;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    }
+
+    .dock-item:active { transform: scale(0.9); }
+
+    /* MODAL */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 150;
+      background: rgba(2, 4, 10, 0.78);
+      backdrop-filter: blur(10px);
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .modal-backdrop.open { display: flex; }
+
+    .modal-sheet {
+      width: 100%;
+      max-width: 480px;
+      background: #0b1224;
+      border-top: 1px solid var(--glass-border);
+      border-radius: 28px 28px 0 0;
+      padding: 22px 20px 34px;
+      max-height: 90vh;
+      overflow-y: auto;
+      animation: sheetUp 0.42s var(--spring);
+    }
+
+    @keyframes sheetUp {
+      from { transform: translateY(100%); }
+      to { transform: translateY(0); }
+    }
+
+    .input-field {
+      width: 100%;
+      margin-top: 8px;
+      padding: 13px 14px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #fff;
+      font-size: 15px;
+      outline: none;
+    }
+
+    .requisite-box {
+      margin-top: 12px;
+      padding: 14px;
+      border-radius: 16px;
+      background: rgba(25, 81, 252, 0.14);
+      border: 1px dashed rgba(103, 169, 255, 0.45);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .copy-pill {
+      display: inline-block;
+      margin-top: 6px;
+      padding: 5px 11px;
+      border-radius: 10px;
+      background: rgba(55, 129, 252, 0.28);
+      color: #fff;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .toast {
+      position: fixed;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-80px);
+      z-index: 9999;
+      background: rgba(15, 25, 50, 0.95);
+      border: 1px solid var(--blue-bright);
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 99px;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      transition: transform 0.4s var(--spring);
+    }
+
+    .toast.show { transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+  <div id="toast" class="toast">Готово!</div>
+
+  <!-- APPLE GLASS SPLASH SCREEN -->
+  <div id="splash-screen">
+    <svg class="logo-svg" viewBox="0 0 240 160" fill="none">
+      <defs>
+        <linearGradient id="leftGlass" x1="20" y1="45" x2="112" y2="115" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#ffffff" stop-opacity="0.96"/>
+          <stop offset="100%" stop-color="#bfdbfe" stop-opacity="0.82"/>
+        </linearGradient>
+        <linearGradient id="rightGlass" x1="128" y1="45" x2="220" y2="115" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="#60a5fa"/>
+          <stop offset="100%" stop-color="#1951fc"/>
+        </linearGradient>
+      </defs>
+      <rect x="20" y="50" width="90" height="62" rx="18" fill="url(#leftGlass)" stroke="rgba(255,255,255,0.7)" stroke-width="1.5"/>
+      <rect x="130" y="50" width="90" height="62" rx="18" fill="url(#rightGlass)" stroke="rgba(255,255,255,0.7)" stroke-width="1.5"/>
+      <path d="M111 26C111 23.7909 112.791 22 115 22H125C127.209 22 129 23.7909 129 26V34.5C129 35.8 128.3 37 127.2 37.7L121.8 41.2V134C121.8 135.1 120.9 136 119.8 136H120.2C119.1 136 118.2 135.1 118.2 134V41.2L112.8 37.7C111.7 37 111 35.8 111 34.5V26Z" fill="#FFFFFF"/>
+    </svg>
+    <div class="splash-title">IvanovService</div>
+    <div class="splash-sub">Монтаж за 24 часа • +15% к пополнению</div>
+    <div class="splash-bar-track"><div class="splash-bar-fill" id="splash-progress"></div></div>
+  </div>
+
+  <!-- LEFT SIDEBAR DRAWER (WITH PROFILE & BALANCE) -->
+  <div class="drawer-backdrop" id="drawer-backdrop" onclick="toggleDrawer(false)"></div>
+  <aside class="left-drawer" id="left-drawer">
+    <div>
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:0 6px 14px;">
+        <div style="display:flex; align-items:center; gap:9px;">
+          <svg width="24" height="17" viewBox="0 0 240 160" fill="none">
+            <rect x="20" y="50" width="90" height="62" rx="18" fill="#dbeafe"/>
+            <rect x="130" y="50" width="90" height="62" rx="18" fill="#3781fc"/>
+            <rect x="117" y="24" width="6" height="112" rx="3" fill="#ffffff"/>
+          </svg>
+          <span style="font-weight:800; font-size:16px;">IvanovService</span>
+        </div>
+        <button onclick="toggleDrawer(false)" style="background:none; border:none; color:var(--text-muted); font-size:20px; cursor:pointer;">✕</button>
+      </div>
+
+      <!-- Profile + Balance Block inside Left Sidebar -->
+      <div class="drawer-profile-card">
+        <div class="drawer-user-row">
+          <div class="drawer-avatar" id="drawer-avatar">И</div>
+          <div>
+            <div style="font-size:14px; font-weight:700;" id="drawer-username">Клиент студии</div>
+            <div style="font-size:11px; color:var(--blue-ice);">Бонус +15% активен</div>
+          </div>
+        </div>
+        <div class="drawer-bal-row">
+          <div>
+            <div style="font-size:10px; color:var(--text-muted); text-transform:uppercase;">Баланс</div>
+            <div style="font-size:19px; font-weight:800; color:#fff;" id="drawer-balance">0 ₽</div>
+          </div>
+          <button class="btn-white" style="padding:8px 12px; font-size:12px; border-radius:12px;" onclick="toggleDrawer(false); openDepositModal();">+ Пополнить</button>
+        </div>
+      </div>
+
+      <div class="drawer-nav-list">
+        <div class="drawer-item active" data-dtab="home" onclick="drawerGo('home')">
+          <div class="drawer-item-left"><span>🏠</span><span>Главная</span></div>
+        </div>
+        <div class="drawer-item" data-dtab="prices" onclick="drawerGo('prices')">
+          <div class="drawer-item-left"><span>💎</span><span>Калькулятор цен</span></div>
+        </div>
+        <div class="drawer-item" data-dtab="projects" onclick="drawerGo('projects')">
+          <div class="drawer-item-left"><span>🎬</span><span>Портфолио работ</span></div>
+        </div>
+        <div class="drawer-item" data-dtab="settings" onclick="drawerGo('settings')">
+          <div class="drawer-item-left"><span>⚙️</span><span>Настройки и связь</span></div>
+        </div>
+        <div class="drawer-item" onclick="toggleDrawer(false); openTelegramDirect();">
+          <div class="drawer-item-left"><span>💬</span><span>Чат с монтажёром</span></div>
+          <span class="drawer-badge">Online</span>
+        </div>
+      </div>
+    </div>
+
+    <div style="padding:10px; border-radius:16px; background:rgba(255,255,255,0.03); font-size:11px; color:var(--text-muted); text-align:center;">
+      Сдача роликов до 24 часов • @ivanovv50
+    </div>
+  </aside>
+
+  <!-- TOP HEADER -->
+  <header class="app-header">
+    <div class="header-left">
+      <button class="menu-burger-btn" onclick="toggleDrawer(true)" aria-label="Меню">
+        <span class="burger-line"></span>
+        <span class="burger-line"></span>
+      </button>
+      <div>
+        <div class="brand-title">IvanovService</div>
+        <div class="brand-status"><span class="status-dot"></span>Принимаю заказы • до 24ч</div>
+      </div>
+    </div>
+    <button class="balance-chip" onclick="openDepositModal()">
+      <span id="header-balance">0 ₽</span>
+      <span style="background:#3781fc; color:#fff; width:18px; height:18px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:13px;">+</span>
+    </button>
+  </header>
+
+  <main class="container">
+    <!-- TAB 1: HOME (SHOWCASE HERO STYLE, NOT BALANCE-FIRST) -->
+    <section id="page-home" class="page active">
+      <div class="hero-showcase">
+        <span class="hero-pill">⚡ Сдача готового ролика до 24 часов</span>
+        <h1 class="hero-h1">Монтаж, который <span>удерживает взгляд</span></h1>
+        <p class="hero-desc">
+          Рилсы, YouTube и динамичный моушн-дизайн. Пополняй баланс заранее и получай <b>+15% бонусом</b> к каждой сумме.
+        </p>
+
+        <div class="hero-glass-preview tap-bounce" onclick="switchTab('prices')">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div style="width:42px; height:42px; border-radius:14px; background:linear-gradient(135deg,#1951fc,#3781fc); display:flex; align-items:center; justify-content:center; font-size:20px;">🎞️</div>
+            <div>
+              <div style="font-size:14px; font-weight:700;">Рилс 20–30 сек + моушн</div>
+              <div style="font-size:12px; color:var(--blue-ice);">Готовность за 1 день • 1 650 ₽</div>
+            </div>
+          </div>
+          <span style="font-size:18px; color:#fff;">→</span>
+        </div>
+
+        <div class="hero-cta-row">
+          <button class="btn-white" onclick="switchTab('prices')">Рассчитать цену</button>
+          <button class="btn-glass" onclick="openDepositModal()">Бонус +15%</button>
+        </div>
+      </div>
+
+      <div class="section-head">
+        <span class="section-title">Почему заказывают здесь</span>
+        <span class="section-hint">Без лишней воды</span>
+      </div>
+
+      <div class="bento-grid">
+        <div class="glass-card widget-box tap-bounce" onclick="switchTab('prices')">
+          <div class="widget-tag">Дедлайн</div>
+          <div class="widget-val">до 1 дня</div>
+          <div class="widget-sub">Отправляю готовый монтаж в течение 24 часов</div>
+        </div>
+        <div class="glass-card widget-box tap-bounce" onclick="openDepositModal()">
+          <div class="widget-tag">Кэшбэк</div>
+          <div class="widget-val">+15%</div>
+          <div class="widget-sub">Начисляю сверху при пополнении баланса</div>
+        </div>
+      </div>
+
+      <!-- SMOOTH 60FPS CURVE WIDGET -->
+      <div class="glass-card curve-widget">
+        <div class="curve-header">
+          <div>
+            <div class="widget-tag">Динамика удержания</div>
+            <div class="curve-metric" id="curve-readout">84%</div>
+          </div>
+          <span class="curve-badge" id="curve-sec">0:15 сек</span>
+        </div>
+        <canvas id="chart-canvas"></canvas>
+        <div class="widget-sub" style="margin-top:6px;">Поведите пальцем по кривой — как акцентные титры держат внимание</div>
+      </div>
+    </section>
+
+    <!-- TAB 2: PRICES -->
+    <section id="page-prices" class="page">
+      <div class="section-head" style="margin-top:2px;">
+        <span class="section-title">Калькулятор монтажа</span>
+        <span class="section-hint">Точная смета</span>
+      </div>
+
+      <div class="seg-tabs" id="cat-tabs">
+        <button class="seg-btn active" onclick="setCategory('reels', this)">Рилсы</button>
+        <button class="seg-btn" onclick="setCategory('youtube', this)">YouTube</button>
+        <button class="seg-btn" onclick="setCategory('subs', this)">Подписки</button>
+        <button class="seg-btn" onclick="setCategory('dev', this)">Другое</button>
+      </div>
+
+      <div class="mode-switch" id="motion-switch">
+        <button class="mode-btn active" onclick="setMotion('standard', this)">Standard Motion</button>
+        <button class="mode-btn" onclick="setMotion('3d', this)">Advanced 3D (+35%)</button>
+      </div>
+
+      <div class="price-list" id="price-list-container"></div>
+
+      <div class="glass-card" style="margin-top:14px;">
+        <div class="section-title" style="font-size:14px;">Дополнительные опции</div>
+        <div class="addon-row" id="addon-urgent" onclick="toggleAddon('urgent')">
+          <div>
+            <div style="font-size:14px; font-weight:600;">Срочный монтаж (за 6 часов)</div>
+            <div style="font-size:11px; color:var(--text-muted);">Приоритет вне очереди</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span style="font-size:13px; font-weight:700; color:var(--blue-ice);">+490 ₽</span>
+            <div class="addon-check">✓</div>
+          </div>
+        </div>
+        <div class="addon-row" id="addon-source" onclick="toggleAddon('source')">
+          <div>
+            <div style="font-size:14px; font-weight:600;">Исходники проекта</div>
+            <div style="font-size:11px; color:var(--text-muted);">Файл проекта со всеми слоями</div>
+          </div>
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span style="font-size:13px; font-weight:700; color:var(--blue-ice);">+350 ₽</span>
+            <div class="addon-check">✓</div>
+          </div>
+        </div>
+
+        <button class="primary-cta" id="order-cta-btn" onclick="createOrder()">Оформить заказ • 1 650 ₽</button>
+      </div>
+    </section>
+
+    <!-- TAB 3: PROJECTS -->
+    <section id="page-projects" class="page">
+      <div class="section-head" style="margin-top:2px;">
+        <span class="section-title">Портфолио работ</span>
+        <span class="section-hint">Обновляется</span>
+      </div>
+      <div class="glass-card" style="text-align:center; padding:32px 20px;">
+        <div style="font-size:38px; margin-bottom:10px;">🎬</div>
+        <div style="font-size:17px; font-weight:700;">Скоро здесь появятся свежие кейсы</div>
+        <div style="font-size:13px; color:var(--text-muted); margin-top:8px; line-height:1.5;">
+          Сейчас активно собираю новые работы для витрины. Примеры монтажа можно запросить напрямую в личке — отправлю за минуту.
+        </div>
+        <button class="primary-cta" onclick="openTelegramDirect()">Запросить примеры у @ivanovv50</button>
+      </div>
+    </section>
+
+    <!-- TAB 4: SETTINGS -->
+    <section id="page-settings" class="page">
+      <div class="section-head" style="margin-top:2px;">
+        <span class="section-title">Настройки и связь</span>
+        <span class="section-hint">v3.0</span>
+      </div>
+
+      <div class="glass-card">
+        <div class="section-title" style="font-size:14px;">Прямая связь с монтажёром</div>
+        <div class="widget-sub" style="margin-top:6px;">
+          Отвечаю лично, помогаю составить ТЗ и подобрать формат ролика.
+        </div>
+        <button class="primary-cta" onclick="openTelegramDirect()">Написать @ivanovv50 в Telegram</button>
+      </div>
+
+      <div class="glass-card" style="margin-top:12px;">
+        <div class="section-title" style="font-size:14px;">Заставка при входе</div>
+        <div class="widget-sub" style="margin-top:4px;">Посмотреть анимацию логотипа Apple Glass</div>
+        <button class="btn-glass" style="width:100%; margin-top:10px;" onclick="replaySplash()">Запустить интро ✨</button>
+      </div>
+
+      <div class="glass-card" style="margin-top:12px;">
+        <div class="section-title" style="font-size:14px;">Реквизиты сервиса</div>
+        <div class="widget-sub" style="margin-top:6px; line-height:1.5;">
+          Банк: <b>Альфа-Банк (СБП)</b><br/>
+          Получатель: <b>Иванов Иван</b><br/>
+          Телефон: <b>+7 905 073 89 66</b>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- FLOATING DOCK -->
+  <nav class="bottom-dock">
+    <button class="dock-item active" data-tab="home" onclick="switchTab('home')">
+      <span style="font-size:17px;">🏠</span>
+      <span>Главная</span>
+    </button>
+    <button class="dock-item" data-tab="prices" onclick="switchTab('prices')">
+      <span style="font-size:17px;">💎</span>
+      <span>Цены</span>
+    </button>
+    <button class="dock-item" data-tab="projects" onclick="switchTab('projects')">
+      <span style="font-size:17px;">🎬</span>
+      <span>Работы</span>
+    </button>
+    <button class="dock-item" data-tab="settings" onclick="switchTab('settings')">
+      <span style="font-size:17px;">⚙️</span>
+      <span>Настройки</span>
+    </button>
+  </nav>
+
+  <!-- DEPOSIT MODAL -->
+  <div class="modal-backdrop" id="deposit-modal" onclick="closeModalOnBg(event)">
+    <div class="modal-sheet">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div style="font-size:18px; font-weight:800;">Пополнение баланса (+15%)</div>
+        <button onclick="closeDepositModal()" style="background:none; border:none; color:var(--text-muted); font-size:22px; cursor:pointer;">✕</button>
+      </div>
+
+      <div style="margin-top:14px;">
+        <label style="font-size:12px; color:var(--text-muted);">Сумма перевода (₽)</label>
+        <input type="number" class="input-field" id="dep-amount" value="1500" oninput="recalcBonus()" />
+        <div style="margin-top:8px; font-size:13px; color:#6ee7b7; font-weight:600;" id="bonus-calc-text">
+          Бонус +15%: +225 ₽ → На баланс зачислится: 1 725 ₽
+        </div>
+      </div>
+
+      <div class="requisite-box">
+        <div>1. Переведите точную сумму по СБП:</div>
+        <div><b>Альфа-Банк:</b> +7 905 073 89 66 (Иванов Иван)</div>
+        <div class="copy-pill" onclick="copyText('+79050738966')">📋 Скопировать номер</div>
+        <div style="margin-top:8px;">2. Укажите в комментарии уникальный код: <b id="verify-code" style="color:#cbe9fd;">IV-4829</b></div>
+      </div>
+
+      <div style="margin-top:12px;">
+        <label style="font-size:12px; color:var(--text-muted);">Последние 4 цифры вашей карты</label>
+        <input type="text" maxlength="4" class="input-field" id="card-last4" placeholder="Например: 4512" />
+      </div>
+
+      <div style="margin-top:12px;">
+        <label style="font-size:12px; color:var(--text-muted);">Скриншот чека об оплате</label>
+        <input type="file" accept="image/*" class="input-field" id="receipt-file" />
+      </div>
+
+      <button class="primary-cta" id="submit-dep-btn" onclick="submitDeposit()">Отправить чек на проверку</button>
+    </div>
+  </div>
+
+  <script>
+    const BACKEND_URL = 'https://ivanov-bot-server.onrender.com';
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+      tg.ready();
+      tg.expand();
+      const u = tg.initDataUnsafe?.user;
+      if (u) {
+        document.getElementById('drawer-username').textContent = u.first_name || u.username || 'Клиент';
+        document.getElementById('drawer-avatar').textContent = (u.first_name || 'К')[0].toUpperCase();
+      }
+    }
+
+    function haptic(style = 'light') {
+      if (tg?.HapticFeedback) tg.HapticFeedback.impactOccurred(style);
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2500);
+    }
+
+    function copyText(txt) {
+      navigator.clipboard?.writeText(txt);
+      haptic('medium');
+      showToast('Номер +7 905 073 89 66 скопирован');
+    }
+
+    function runSplash() {
+      const splash = document.getElementById('splash-screen');
+      const bar = document.getElementById('splash-progress');
+      splash.classList.remove('hidden');
+      bar.style.width = '0%';
+      setTimeout(() => { bar.style.width = '100%'; }, 60);
+      setTimeout(() => { splash.classList.add('hidden'); }, 1450);
+    }
+
+    function replaySplash() {
+      haptic('light');
+      runSplash();
+    }
+
+    window.addEventListener('load', () => {
+      runSplash();
+      renderPrices();
+      initSmoothCurve();
+    });
+
+    // LEFT DRAWER LOGIC
+    function toggleDrawer(open) {
+      haptic('light');
+      document.getElementById('left-drawer').classList.toggle('open', open);
+      document.getElementById('drawer-backdrop').classList.toggle('open', open);
+    }
+
+    function drawerGo(tabName) {
+      toggleDrawer(false);
+      switchTab(tabName);
+    }
+
+    // TABS & SWIPE
+    const tabOrder = ['home', 'prices', 'projects', 'settings'];
+    let currentTabIdx = 0;
+
+    function switchTab(tabName) {
+      haptic('light');
+      currentTabIdx = tabOrder.indexOf(tabName);
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById('page-' + tabName).classList.add('active');
+
+      document.querySelectorAll('.dock-item').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tabName);
+      });
+      document.querySelectorAll('.drawer-item[data-dtab]').forEach(item => {
+        item.classList.toggle('active', item.dataset.dtab === tabName);
+      });
+    }
+
+    let touchStartX = 0;
+    let touchStartY = 0;
+    document.addEventListener('touchstart', e => {
+      if (e.target.closest('#chart-canvas')) return;
+      touchStartX = e.changedTouches[0].screenX;
+      touchStartY = e.changedTouches[0].screenY;
+    }, { passive: true });
+
+    document.addEventListener('touchend', e => {
+      if (e.target.closest('#chart-canvas')) return;
+      const dx = e.changedTouches[0].screenX - touchStartX;
+      const dy = e.changedTouches[0].screenY - touchStartY;
+      if (Math.abs(dx) > 65 && Math.abs(dx) > Math.abs(dy) * 1.4) {
+        if (dx > 0 && touchStartX < 40) {
+          toggleDrawer(true);
+        } else if (dx < 0 && currentTabIdx < tabOrder.length - 1) {
+          switchTab(tabOrder[currentTabIdx + 1]);
+        } else if (dx > 0 && currentTabIdx > 0) {
+          switchTab(tabOrder[currentTabIdx - 1]);
+        }
+      }
+    }, { passive: true });
+
+    // SMOOTH 60FPS CURVE
+    function initSmoothCurve() {
+      const canvas = document.getElementById('chart-canvas');
+      const ctx = canvas.getContext('2d');
+      const readout = document.getElementById('curve-readout');
+      const secBadge = document.getElementById('curve-sec');
+
+      const points = [0.28, 0.35, 0.31, 0.62, 0.88, 0.74, 0.66, 0.54, 0.42];
+      let targetProgress = 0.5;
+      let currentProgress = 0.5;
+      let isDragging = false;
+
+      function resize() {
+        const dpr = window.devicePixelRatio || 1;
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      }
+      resize();
+      window.addEventListener('resize', resize);
+
+      function getCatmullRomY(t) {
+        const scaled = t * (points.length - 1);
+        const idx = Math.floor(scaled);
+        const frac = scaled - idx;
+        const p0 = points[Math.max(0, idx - 1)];
+        const p1 = points[idx];
+        const p2 = points[Math.min(points.length - 1, idx + 1)];
+        const p3 = points[Math.min(points.length - 1, idx + 2)];
+        const t2 = frac * frac;
+        const t3 = t2 * frac;
+        return 0.5 * ((2 * p1) + (-p0 + p2) * frac + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t2 + (-p0 + 3 * p1 - 3 * p2 + p3) * t3);
+      }
+
+      function updateTarget(clientX) {
+        const rect = canvas.getBoundingClientRect();
+        targetProgress = Math.max(0.02, Math.min(0.98, (clientX - rect.left) / rect.width));
+      }
+
+      canvas.addEventListener('pointerdown', e => { isDragging = true; canvas.setPointerCapture(e.pointerId); updateTarget(e.clientX); haptic('light'); });
+      canvas.addEventListener('pointermove', e => { if (isDragging) updateTarget(e.clientX); });
+      canvas.addEventListener('pointerup', () => { isDragging = false; });
+      canvas.addEventListener('pointercancel', () => { isDragging = false; });
+
+      function renderLoop() {
+        currentProgress += (targetProgress - currentProgress) * 0.16;
+        const rect = canvas.getBoundingClientRect();
+        const w = rect.width;
+        const h = rect.height;
+        ctx.clearRect(0, 0, w, h);
+
+        ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+        ctx.lineWidth = 1;
+        for (let i = 1; i <= 3; i++) {
+          const gy = (h / 4) * i;
+          ctx.beginPath(); ctx.moveTo(0, gy); ctx.lineTo(w, gy); ctx.stroke();
+        }
+
+        const steps = 80;
+        ctx.beginPath();
+        for (let i = 0; i <= steps; i++) {
+          const t = i / steps;
+          const x = t * w;
+          const val = getCatmullRomY(t);
+          const y = h - (val * (h - 26) + 13);
+          if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+
+        const lineGrad = ctx.createLinearGradient(0, 0, w, 0);
+        lineGrad.addColorStop(0, '#1951fc');
+        lineGrad.addColorStop(0.5, '#cbe9fd');
+        lineGrad.addColorStop(1, '#3781fc');
+
+        ctx.strokeStyle = lineGrad;
+        ctx.lineWidth = 3.5;
+        ctx.lineCap = 'round';
+        ctx.shadowColor = 'rgba(55, 129, 252, 0.7)';
+        ctx.shadowBlur = 12;
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        const dotX = currentProgress * w;
+        const dotVal = getCatmullRomY(currentProgress);
+        const dotY = h - (dotVal * (h - 26) + 13);
+
+        ctx.beginPath(); ctx.arc(dotX, dotY, 12, 0, Math.PI * 2); ctx.fillStyle = 'rgba(203, 233, 253, 0.25)'; ctx.fill();
+        ctx.beginPath(); ctx.arc(dotX, dotY, 6, 0, Math.PI * 2); ctx.fillStyle = '#ffffff'; ctx.fill();
+
+        readout.textContent = Math.round(dotVal * 100) + '%';
+        const sec = Math.round(currentProgress * 30);
+        secBadge.textContent = `0:${sec < 10 ? '0' + sec : sec} сек`;
+
+        requestAnimationFrame(renderLoop);
+      }
+      requestAnimationFrame(renderLoop);
+    }
+
+    // PRICES
+    const catalog = {
+      reels: [
+        { title: 'до 20 секунд', desc: 'Динамичный короткий ролик', base: 1340 },
+        { title: '20–30 секунд', desc: 'Стандартный ролик с моушн-титрами', base: 1650 },
+        { title: '30–40 секунд', desc: 'Ролик с историей и саунд-дизайном', base: 1960 },
+        { title: '40–60 секунд', desc: 'Длинный экспертный рилс', base: 2480 },
+        { title: '60–100 секунд', desc: 'Расширенный выпуск', base: 3120 }
+      ],
+      youtube: [
+        { title: '1:00–3:00 мин', desc: 'Короткий горизонтальный ролик', base: 2590 },
+        { title: '3:00–6:00 мин', desc: 'Средний выпуск со вставками', base: 3640 },
+        { title: '6:00–9:00 мин', desc: 'Выпуск с историей и графикой', base: 4680 },
+        { title: '9:00–12:00 мин', desc: 'Полноценный длинный ролик', base: 5720 }
+      ],
+      subs: [
+        { title: 'START • 4 ролика/мес', desc: 'До 50 сек каждый ролик', base: 6180 },
+        { title: 'PRO • 8 роликов/мес', desc: 'Оптимально для регулярного постинга', base: 11850 },
+        { title: 'PRO PLUS • 12 роликов/мес', desc: 'Максимальный охват и приоритет', base: 16990 },
+        { title: 'MAX • 20 роликов/мес', desc: 'Полное ведение контента под ключ', base: 26450 }
+      ],
+      dev: [
+        { title: 'Анимация логотипа', desc: 'Стильная заставка для видео 4K', base: 1890 },
+        { title: 'Оформление канала', desc: 'Баннер + аватарка + обложки', base: 2750 },
+        { title: 'Telegram Mini App', desc: 'Разработка мини-приложения под ключ', base: 7490 }
+      ]
+    };
+
+    let activeCat = 'reels';
+    let selectedIdx = 1;
+    let motionMode = 'standard';
+    let addons = { urgent: false, source: false };
+
+    function setCategory(cat, btn) {
+      haptic('light');
+      activeCat = cat;
+      selectedIdx = 0;
+      document.querySelectorAll('#cat-tabs .seg-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderPrices();
+    }
+
+    function setMotion(mode, btn) {
+      haptic('light');
+      motionMode = mode;
+      document.querySelectorAll('#motion-switch .mode-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderPrices();
+    }
+
+    function toggleAddon(key) {
+      haptic('light');
+      addons[key] = !addons[key];
+      document.getElementById('addon-' + key).classList.toggle('checked', addons[key]);
+      updateTotalCta();
+    }
+
+    function getItemPrice(base) {
+      return motionMode === '3d' ? Math.round(base * 1.35) : base;
+    }
+
+    function renderPrices() {
+      const container = document.getElementById('price-list-container');
+      container.innerHTML = '';
+      catalog[activeCat].forEach((item, idx) => {
+        const finalCost = getItemPrice(item.base);
+        const div = document.createElement('div');
+        div.className = 'price-item' + (idx === selectedIdx ? ' selected' : '');
+        div.innerHTML = `
+          <div>
+            <div class="price-item-title">${item.title}</div>
+            <div class="price-item-desc">${item.desc}</div>
+          </div>
+          <div class="price-item-cost">${finalCost.toLocaleString('ru-RU')} ₽</div>
+        `;
+        div.onclick = () => { haptic('light'); selectedIdx = idx; renderPrices(); };
+        container.appendChild(div);
+      });
+      updateTotalCta();
+    }
+
+    function getCalculatedTotal() {
+      const item = catalog[activeCat][selectedIdx];
+      let sum = getItemPrice(item.base);
+      if (addons.urgent) sum += 490;
+      if (addons.source) sum += 350;
+      return sum;
+    }
+
+    function updateTotalCta() {
+      const total = getCalculatedTotal();
+      document.getElementById('order-cta-btn').textContent = `Оформить заказ • ${total.toLocaleString('ru-RU')} ₽`;
+    }
+
+    // BALANCE & REAL SERVER DEPOSIT
+    let userBalance = 0;
+    let currentCode = 'IV-4829';
+
+    function updateBalanceUI() {
+      const str = userBalance.toLocaleString('ru-RU') + ' ₽';
+      document.getElementById('header-balance').textContent = str;
+      document.getElementById('drawer-balance').textContent = str;
+    }
+
+    function openDepositModal() {
+      haptic('medium');
+      currentCode = 'IV-' + Math.floor(1000 + Math.random() * 9000);
+      document.getElementById('verify-code').textContent = currentCode;
+      document.getElementById('deposit-modal').classList.add('open');
+      recalcBonus();
+    }
+
+    function closeDepositModal() {
+      document.getElementById('deposit-modal').classList.remove('open');
+    }
+
+    function closeModalOnBg(e) {
+      if (e.target.id === 'deposit-modal') closeDepositModal();
+    }
+
+    function recalcBonus() {
+      const raw = Math.max(0, parseInt(document.getElementById('dep-amount').value || '0', 10));
+      const bonus = Math.round(raw * 0.15);
+      const total = raw + bonus;
+      document.getElementById('bonus-calc-text').textContent =
+        `Бонус +15%: +${bonus.toLocaleString('ru-RU')} ₽ → На баланс зачислится: ${total.toLocaleString('ru-RU')} ₽`;
+      return { raw, bonus, total };
+    }
+
+    async function submitDeposit() {
+      const { raw, bonus, total } = recalcBonus();
+      const card4 = document.getElementById('card-last4').value.trim();
+      const fileInput = document.getElementById('receipt-file');
+      const btn = document.getElementById('submit-dep-btn');
+
+      if (raw < 100) return showToast('Минимальная сумма пополнения 100 ₽');
+      if (card4.length !== 4) return showToast('Введите 4 последние цифры вашей карты');
+      if (!fileInput.files || fileInput.files.length === 0) return showToast('Прикрепите скриншот чека');
+
+      haptic('heavy');
+      btn.disabled = true;
+      btn.textContent = 'Отправляем чек...';
+
+      try {
+        const fd = new FormData();
+        fd.append('code', currentCode);
+        fd.append('amount', String(raw));
+        fd.append('bonus', String(bonus));
+        fd.append('total', String(total));
+        fd.append('card4', card4);
+        fd.append('user_id', String(tg?.initDataUnsafe?.user?.id || ''));
+        fd.append('username', tg?.initDataUnsafe?.user?.username || 'client');
+        fd.append('receipt', fileInput.files[0]);
+
+        const res = await fetch(BACKEND_URL + '/api/deposit', {
+          method: 'POST',
+          body: fd
+        });
+
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        showToast('✅ Чек отправлен! Ожидайте подтверждения в боте');
+        closeDepositModal();
+      } catch (err) {
+        showToast('⚠️ Сервер просыпается, нажмите ещё раз через 10 сек');
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Отправить чек на проверку';
+      }
+    }
+
+    function createOrder() {
+      const total = getCalculatedTotal();
+      const item = catalog[activeCat][selectedIdx];
+      haptic('medium');
+      if (userBalance >= total) {
+        userBalance -= total;
+        updateBalanceUI();
+        showToast(`🎉 Заказ «${item.title}» оплачен с баланса!`);
+      } else {
+        showToast(`Не хватает ${(total - userBalance).toLocaleString('ru-RU')} ₽ — пополните баланс`);
+        openDepositModal();
+      }
+    }
+
+    function openTelegramDirect() {
+      if (tg) tg.openTelegramLink('https://t.me/ivanovv50');
+      else window.open('https://t.me/ivanovv50', '_blank');
+    }
+  </script>
+</body>
+</html>
